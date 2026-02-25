@@ -1,0 +1,157 @@
+{
+  "title": "OTP Verification Service",
+  "description": "Design a One-Time Password (OTP) Verification Service. The service must: 1. POST /otp/request — generate a 6-digit OTP, store in Redis with 5-min TTL, return requestId. 2. POST /otp/verify — validate OTP against Redis, enforce max 3 attempts, return verified status.",
+  "difficulty": "Easy",
+  "acceptance": 74.2,
+  "tags": ["REST API", "Redis", "Auth"],
+  "constraints": [
+    "OTP expires in exactly 5 minutes",
+    "Max 3 verification attempts per requestId",
+    "p99 latency < 100ms under 500 req/s",
+    "Use Redis — no in-memory maps",
+    "Return HTTP 429 after exceeding retry limit"
+  ],
+  "defaultCode": {
+    "EXPRESS_JS": {
+      "otp.controller.js": "const router = require('express').Router();\nconst OtpService = require('./otp.service');\n\nrouter.post('/request', async (req, res, next) => {\n  try {\n    const { phone } = req.body;\n    if (!phone) return res.status(400).json({ error: 'phone required' });\n    res.json(await OtpService.requestOtp(phone));\n  } catch (e) { next(e); }\n});\n\nrouter.post('/verify', async (req, res, next) => {\n  try {\n    const { requestId, otp } = req.body;\n    // TODO: call OtpService.verifyOtp and return result\n    res.json({ verified: false });\n  } catch (e) { next(e); }\n});\n\nmodule.exports = router;",
+      "otp.service.js": "// TODO: Implement OTP service logic\nmodule.exports = {\n  requestOtp: async (phone) => {\n    // TODO: generate OTP, store in Redis, return requestId\n  },\n  verifyOtp: async (requestId, otp) => {\n    // TODO: validate OTP from Redis, enforce max 3 attempts\n  }\n};",
+      "otp.repository.js": "// TODO: Implement Redis operations\nmodule.exports = {\n  saveOtp: async (requestId, otp, ttl) => {\n    // TODO: store OTP in Redis with TTL\n  },\n  getOtp: async (requestId) => {\n    // TODO: retrieve OTP from Redis\n  },\n  incrementAttempts: async (requestId) => {\n    // TODO: increment and return attempt count\n  }\n};"
+    },
+    "FAST_API": {
+      "otp_controller.py": "from fastapi import APIRouter, HTTPException\nfrom otp_service import OtpService\nfrom models import OtpRequest, VerifyRequest\n\nrouter = APIRouter(prefix='/otp')\nservice = OtpService()\n\n@router.post('/request')\nasync def request_otp(body: OtpRequest):\n    if not body.phone:\n        raise HTTPException(status_code=400, detail='phone required')\n    return await service.request_otp(body.phone)\n\n@router.post('/verify')\nasync def verify_otp(body: VerifyRequest):\n    # TODO: call service.verify_otp and return result\n    return { 'verified': False }",
+      "otp_service.py": "# TODO: Implement OTP service logic\nclass OtpService:\n    async def request_otp(self, phone: str):\n        # TODO: generate OTP, store in Redis, return requestId\n        pass\n\n    async def verify_otp(self, request_id: str, otp: str):\n        # TODO: validate OTP from Redis, enforce max 3 attempts\n        pass",
+      "otp_repository.py": "# TODO: Implement Redis operations\nclass OtpRepository:\n    async def save_otp(self, request_id: str, otp: str, ttl: int):\n        # TODO: store OTP in Redis with TTL\n        pass\n\n    async def get_otp(self, request_id: str):\n        # TODO: retrieve OTP from Redis\n        pass\n\n    async def increment_attempts(self, request_id: str):\n        # TODO: increment and return attempt count\n        pass"
+    },
+    "FLASK": {
+      "otp_controller.py": "from flask import Blueprint, request, jsonify\nfrom otp_service import OtpService\n\notp_bp = Blueprint('otp', __name__, url_prefix='/otp')\nservice = OtpService()\n\n@otp_bp.route('/request', methods=['POST'])\ndef request_otp():\n    data = request.get_json()\n    if not data or 'phone' not in data:\n        return jsonify({'error': 'phone required'}), 400\n    return jsonify(service.request_otp(data['phone']))\n\n@otp_bp.route('/verify', methods=['POST'])\ndef verify_otp():\n    data = request.get_json()\n    # TODO: call service.verify_otp and return result\n    return jsonify({'verified': False})",
+      "otp_service.py": "# TODO: Implement OTP service logic\nclass OtpService:\n    def request_otp(self, phone: str):\n        # TODO: generate OTP, store in Redis, return requestId\n        pass\n\n    def verify_otp(self, request_id: str, otp: str):\n        # TODO: validate OTP from Redis, enforce max 3 attempts\n        pass",
+      "otp_repository.py": "# TODO: Implement Redis operations\nclass OtpRepository:\n    def save_otp(self, request_id, otp, ttl):\n        # TODO: store OTP in Redis with TTL\n        pass\n\n    def get_otp(self, request_id):\n        # TODO: retrieve OTP from Redis\n        pass\n\n    def increment_attempts(self, request_id):\n        # TODO: increment and return attempt count\n        pass"
+    },
+    "DJANGO_REST": {
+      "otp_controller.py": "from rest_framework.views import APIView\nfrom rest_framework.response import Response\nfrom rest_framework import status\nfrom .otp_service import OtpService\n\nservice = OtpService()\n\nclass RequestOtpView(APIView):\n    def post(self, request):\n        phone = request.data.get('phone')\n        if not phone:\n            return Response({'error': 'phone required'}, status=status.HTTP_400_BAD_REQUEST)\n        return Response(service.request_otp(phone))\n\nclass VerifyOtpView(APIView):\n    def post(self, request):\n        # TODO: call service.verify_otp and return result\n        return Response({'verified': False})",
+      "otp_service.py": "# TODO: Implement OTP service logic\nclass OtpService:\n    def request_otp(self, phone: str):\n        # TODO: generate OTP, store in Redis, return requestId\n        pass\n\n    def verify_otp(self, request_id: str, otp: str):\n        # TODO: validate OTP from Redis, enforce max 3 attempts\n        pass",
+      "otp_repository.py": "# TODO: Implement Redis operations\nclass OtpRepository:\n    def save_otp(self, request_id, otp, ttl):\n        pass\n\n    def get_otp(self, request_id):\n        pass\n\n    def increment_attempts(self, request_id):\n        pass"
+    },
+    "SPRING_BOOT": {
+      "OtpController.java": "// OtpController.java\n@RestController\n@RequestMapping(\"/otp\")\n@RequiredArgsConstructor\npublic class OtpController {\n\n    private final OtpService otpService;\n\n    @PostMapping(\"/request\")\n    public ResponseEntity<OtpResponse> requestOtp(@RequestBody @Valid OtpRequest body) {\n        return ResponseEntity.ok(otpService.requestOtp(body.getPhone()));\n    }\n\n    @PostMapping(\"/verify\")\n    public ResponseEntity<VerifyResponse> verifyOtp(@RequestBody @Valid VerifyRequest body) {\n        // TODO: call otpService.verifyOtp and return result\n        return ResponseEntity.ok(new VerifyResponse(false));\n    }\n}",
+      "OtpService.java": "// OtpService.java\npublic interface OtpService {\n    OtpResponse requestOtp(String phone);\n    VerifyResponse verifyOtp(String requestId, String otp);\n}",
+      "OtpRepository.java": "// OtpRepository.java\npublic interface OtpRepository {\n    void saveOtp(String requestId, String otp, long ttlSeconds);\n    String getOtp(String requestId);\n    long incrementAttempts(String requestId);\n}"
+    },
+    "GIN": {
+      "otp_controller.go": "// otp_controller.go\npackage otp\n\nimport (\n\t\"github.com/gin-gonic/gin\"\n\t\"net/http\"\n)\n\ntype OtpController struct {\n\tService OtpService\n}\n\nfunc (c *OtpController) RequestOtp(ctx *gin.Context) {\n\tvar body OtpRequest\n\tif err := ctx.ShouldBindJSON(&body); err != nil {\n\t\tctx.JSON(http.StatusBadRequest, gin.H{\"error\": \"phone required\"})\n\t\treturn\n\t}\n\tresult, err := c.Service.RequestOtp(body.Phone)\n\tif err != nil {\n\t\tctx.JSON(http.StatusInternalServerError, gin.H{\"error\": err.Error()})\n\t\treturn\n\t}\n\tctx.JSON(http.StatusOK, result)\n}\n\nfunc (c *OtpController) VerifyOtp(ctx *gin.Context) {\n\t// TODO: call service.VerifyOtp and return result\n\tctx.JSON(http.StatusOK, gin.H{\"verified\": false})\n}",
+      "otp_service.go": "// otp_service.go\npackage otp\n\ntype OtpService interface {\n\tRequestOtp(phone string) (*OtpResponse, error)\n\tVerifyOtp(requestId string, otp string) (*VerifyResponse, error)\n}",
+      "otp_repository.go": "// otp_repository.go\npackage otp\n\ntype OtpRepository interface {\n\tSaveOtp(requestId string, otp string, ttl int) error\n\tGetOtp(requestId string) (string, error)\n\tIncrementAttempts(requestId string) (int64, error)\n}"
+    },
+    "FIBER": {
+      "otp_controller.go": "// otp_controller.go\npackage otp\n\nimport \"github.com/gofiber/fiber/v2\"\n\ntype OtpController struct {\n\tService OtpService\n}\n\nfunc (c *OtpController) RequestOtp(ctx *fiber.Ctx) error {\n\tvar body OtpRequest\n\tif err := ctx.BodyParser(&body); err != nil || body.Phone == \"\" {\n\t\treturn ctx.Status(400).JSON(fiber.Map{\"error\": \"phone required\"})\n\t}\n\tresult, err := c.Service.RequestOtp(body.Phone)\n\tif err != nil {\n\t\treturn ctx.Status(500).JSON(fiber.Map{\"error\": err.Error()})\n\t}\n\treturn ctx.JSON(result)\n}\n\nfunc (c *OtpController) VerifyOtp(ctx *fiber.Ctx) error {\n\t// TODO: call service.VerifyOtp and return result\n\treturn ctx.JSON(fiber.Map{\"verified\": false})\n}",
+      "otp_service.go": "// otp_service.go\npackage otp\n\ntype OtpService interface {\n\tRequestOtp(phone string) (*OtpResponse, error)\n\tVerifyOtp(requestId string, otp string) (*VerifyResponse, error)\n}",
+      "otp_repository.go": "// otp_repository.go\npackage otp\n\ntype OtpRepository interface {\n\tSaveOtp(requestId string, otp string, ttl int) error\n\tGetOtp(requestId string) (string, error)\n\tIncrementAttempts(requestId string) (int64, error)\n}"
+    },
+    "ACTIX_WEB": {
+      "otp_controller.rs": "// otp_controller.rs\nuse actix_web::{post, web, HttpResponse, Responder};\nuse crate::otp_service::OtpService;\n\n#[post(\"/otp/request\")]\nasync fn request_otp(body: web::Json<OtpRequest>, service: web::Data<OtpService>) -> impl Responder {\n    if body.phone.is_empty() {\n        return HttpResponse::BadRequest().json(serde_json::json!({\"error\": \"phone required\"}));\n    }\n    match service.request_otp(&body.phone).await {\n        Ok(result) => HttpResponse::Ok().json(result),\n        Err(e) => HttpResponse::InternalServerError().json(serde_json::json!({\"error\": e.to_string()}))\n    }\n}\n\n#[post(\"/otp/verify\")]\nasync fn verify_otp(body: web::Json<VerifyRequest>) -> impl Responder {\n    // TODO: call service.verify_otp and return result\n    HttpResponse::Ok().json(serde_json::json!({\"verified\": false}))\n}",
+      "otp_service.rs": "// otp_service.rs\npub struct OtpService;\n\nimpl OtpService {\n    pub async fn request_otp(&self, phone: &str) -> Result<OtpResponse, Box<dyn std::error::Error>> {\n        // TODO: generate OTP, store in Redis, return requestId\n        todo!()\n    }\n\n    pub async fn verify_otp(&self, request_id: &str, otp: &str) -> Result<VerifyResponse, Box<dyn std::error::Error>> {\n        // TODO: validate OTP from Redis, enforce max 3 attempts\n        todo!()\n    }\n}",
+      "otp_repository.rs": "// otp_repository.rs\npub struct OtpRepository;\n\nimpl OtpRepository {\n    pub async fn save_otp(&self, request_id: &str, otp: &str, ttl: u64) -> Result<(), Box<dyn std::error::Error>> {\n        // TODO: store OTP in Redis with TTL\n        todo!()\n    }\n\n    pub async fn get_otp(&self, request_id: &str) -> Result<Option<String>, Box<dyn std::error::Error>> {\n        // TODO: retrieve OTP from Redis\n        todo!()\n    }\n\n    pub async fn increment_attempts(&self, request_id: &str) -> Result<i64, Box<dyn std::error::Error>> {\n        // TODO: increment and return attempt count\n        todo!()\n    }\n}"
+    },
+    "LARAVEL": {
+      "OtpController.php": "<?php\n// OtpController.php\nnamespace App\\Http\\Controllers;\n\nuse Illuminate\\Http\\Request;\nuse App\\Services\\OtpService;\n\nclass OtpController extends Controller {\n\n    public function __construct(private OtpService $otpService) {}\n\n    public function requestOtp(Request $request) {\n        $request->validate(['phone' => 'required|string']);\n        return response()->json($this->otpService->requestOtp($request->phone));\n    }\n\n    public function verifyOtp(Request $request) {\n        // TODO: call otpService->verifyOtp and return result\n        return response()->json(['verified' => false]);\n    }\n}",
+      "OtpService.php": "<?php\n// OtpService.php\nnamespace App\\Services;\n\nclass OtpService {\n    public function requestOtp(string $phone): array {\n        // TODO: generate OTP, store in Redis, return requestId\n    }\n\n    public function verifyOtp(string $requestId, string $otp): array {\n        // TODO: validate OTP from Redis, enforce max 3 attempts\n    }\n}",
+      "OtpRepository.php": "<?php\n// OtpRepository.php\nnamespace App\\Repositories;\n\nclass OtpRepository {\n    public function saveOtp(string $requestId, string $otp, int $ttl): void {\n        // TODO: store OTP in Redis with TTL\n    }\n\n    public function getOtp(string $requestId): ?string {\n        // TODO: retrieve OTP from Redis\n    }\n\n    public function incrementAttempts(string $requestId): int {\n        // TODO: increment and return attempt count\n    }\n}"
+    }
+  },
+  "exampleTestCases": [
+    {
+      "input": "POST /otp/request\n{ \"phone\": \"+91-9876543210\" }",
+      "expectedOutput": "{ \"requestId\": \"req_abc123\", \"expiresIn\": 300 }",
+      "isHide":true
+    },
+    {
+      "input": "POST /otp/verify\n{ \"requestId\": \"req_abc123\", \"otp\": \"482910\" }",
+      "expectedOutput": "{ \"verified\": true }",
+      "isHide":false
+    }
+  ]
+}
+
+
+{
+  "title": "URL Shortener with Analytics",
+  "description": "Build a URL shortener service with click analytics. Endpoints: 1. POST /shorten — accept a long URL, return a short code (e.g. abc123). 2. GET /:code — redirect to original URL, record analytics (IP, timestamp, user-agent). 3. GET /:code/stats — return total clicks, top referrers, clicks per day.",
+  "difficulty": "Easy",
+  "acceptance": 68.5,
+  "tags": ["REST API", "Database", "Cache"],
+  "constraints": [
+    "Short codes must be unique and 6 characters",
+    "Redirect latency < 50ms (use Redis cache)",
+    "Store analytics in a time-series friendly structure",
+    "Handle 10,000 redirects/sec"
+  ],
+  "defaultCode": {
+    "EXPRESS_JS": {
+      "otp.controller.js": "// url.controller.js\nconst router = require('express').Router();\nconst UrlService = require('./url.service');\n\n// TODO: Define your URL Shortener routes here\n// Example:\n// router.post('/', async (req, res, next) => {\n//   try {\n//     const result = await UrlService.create(req.body);\n//     res.status(201).json(result);\n//   } catch (e) { next(e); }\n// });\n\nmodule.exports = router;",
+      "otp.service.js": "// url.service.js\n// TODO: Implement URL Shortener service logic\nmodule.exports = {\n  createShortUrl: async (longUrl) => {\n    // TODO: generate 6-char unique code, store in DB + Redis cache\n  },\n  redirect: async (code, meta) => {\n    // TODO: fetch original URL from Redis/DB, record analytics\n  },\n  getStats: async (code) => {\n    // TODO: return total clicks, top referrers, clicks per day\n  }\n};",
+      "otp.repository.js": "// url.repository.js\n// TODO: Implement DB + Redis operations\nmodule.exports = {\n  saveUrl: async (code, longUrl) => {\n    // TODO: store short code -> long URL mapping\n  },\n  getUrl: async (code) => {\n    // TODO: fetch from Redis first, fallback to DB\n  },\n  recordClick: async (code, ip, userAgent, timestamp) => {\n    // TODO: store analytics event\n  },\n  getStats: async (code) => {\n    // TODO: aggregate clicks, referrers, clicks per day\n  }\n};"
+    },
+    "FAST_API": {
+      "otp_controller.py": "# url_controller.py\nfrom fastapi import APIRouter, Request\nfrom fastapi.responses import RedirectResponse\nfrom url_service import UrlService\nfrom models import ShortenRequest\n\nrouter = APIRouter()\nservice = UrlService()\n\n@router.post('/shorten')\nasync def shorten(body: ShortenRequest):\n    # TODO: call service.create_short_url and return result\n    pass\n\n@router.get('/{code}')\nasync def redirect(code: str, request: Request):\n    # TODO: fetch original URL, record analytics, return redirect\n    pass\n\n@router.get('/{code}/stats')\nasync def stats(code: str):\n    # TODO: return total clicks, top referrers, clicks per day\n    pass",
+      "otp_service.py": "# url_service.py\n# TODO: Implement URL Shortener service logic\nclass UrlService:\n    async def create_short_url(self, long_url: str):\n        # TODO: generate 6-char unique code, store in DB + Redis\n        pass\n\n    async def redirect(self, code: str, meta: dict):\n        # TODO: fetch original URL, record analytics\n        pass\n\n    async def get_stats(self, code: str):\n        # TODO: return analytics summary\n        pass",
+      "otp_repository.py": "# url_repository.py\n# TODO: Implement DB + Redis operations\nclass UrlRepository:\n    async def save_url(self, code: str, long_url: str):\n        pass\n\n    async def get_url(self, code: str):\n        pass\n\n    async def record_click(self, code: str, ip: str, user_agent: str, timestamp):\n        pass\n\n    async def get_stats(self, code: str):\n        pass"
+    },
+    "FLASK": {
+      "otp_controller.py": "# url_controller.py\nfrom flask import Blueprint, request, jsonify, redirect\nfrom url_service import UrlService\n\nurl_bp = Blueprint('url', __name__)\nservice = UrlService()\n\n@url_bp.route('/shorten', methods=['POST'])\ndef shorten():\n    data = request.get_json()\n    # TODO: call service.create_short_url and return result\n    pass\n\n@url_bp.route('/<code>', methods=['GET'])\ndef redirect_url(code):\n    # TODO: fetch original URL, record analytics, return redirect\n    pass\n\n@url_bp.route('/<code>/stats', methods=['GET'])\ndef stats(code):\n    # TODO: return total clicks, top referrers, clicks per day\n    pass",
+      "otp_service.py": "# url_service.py\nclass UrlService:\n    def create_short_url(self, long_url: str):\n        # TODO: generate 6-char unique code, store in DB + Redis\n        pass\n\n    def redirect(self, code: str, meta: dict):\n        # TODO: fetch original URL, record analytics\n        pass\n\n    def get_stats(self, code: str):\n        # TODO: return analytics summary\n        pass",
+      "otp_repository.py": "# url_repository.py\nclass UrlRepository:\n    def save_url(self, code, long_url):\n        pass\n\n    def get_url(self, code):\n        pass\n\n    def record_click(self, code, ip, user_agent, timestamp):\n        pass\n\n    def get_stats(self, code):\n        pass"
+    },
+    "DJANGO_REST": {
+      "otp_controller.py": "# url_controller.py\nfrom rest_framework.views import APIView\nfrom rest_framework.response import Response\nfrom rest_framework import status\nfrom django.shortcuts import redirect\nfrom .url_service import UrlService\n\nservice = UrlService()\n\nclass ShortenView(APIView):\n    def post(self, request):\n        # TODO: call service.create_short_url and return result\n        pass\n\nclass RedirectView(APIView):\n    def get(self, request, code):\n        # TODO: fetch original URL, record analytics, return redirect\n        pass\n\nclass StatsView(APIView):\n    def get(self, request, code):\n        # TODO: return total clicks, top referrers, clicks per day\n        pass",
+      "otp_service.py": "# url_service.py\nclass UrlService:\n    def create_short_url(self, long_url: str):\n        pass\n\n    def redirect(self, code: str, meta: dict):\n        pass\n\n    def get_stats(self, code: str):\n        pass",
+      "otp_repository.py": "# url_repository.py\nclass UrlRepository:\n    def save_url(self, code, long_url):\n        pass\n\n    def get_url(self, code):\n        pass\n\n    def record_click(self, code, ip, user_agent, timestamp):\n        pass\n\n    def get_stats(self, code):\n        pass"
+    },
+    "SPRING_BOOT": {
+      "OtpController.java": "// UrlController.java\n@RestController\n@RequiredArgsConstructor\npublic class UrlController {\n\n    private final UrlService urlService;\n\n    @PostMapping(\"/shorten\")\n    public ResponseEntity<ShortenResponse> shorten(@RequestBody @Valid ShortenRequest body) {\n        // TODO: call urlService.createShortUrl and return result\n        return ResponseEntity.ok(new ShortenResponse());\n    }\n\n    @GetMapping(\"/{code}\")\n    public ResponseEntity<Void> redirect(@PathVariable String code, HttpServletRequest request) {\n        // TODO: fetch original URL, record analytics, return 302 redirect\n        return ResponseEntity.status(302).build();\n    }\n\n    @GetMapping(\"/{code}/stats\")\n    public ResponseEntity<StatsResponse> stats(@PathVariable String code) {\n        // TODO: return total clicks, top referrers, clicks per day\n        return ResponseEntity.ok(new StatsResponse());\n    }\n}",
+      "OtpService.java": "// UrlService.java\npublic interface UrlService {\n    ShortenResponse createShortUrl(String longUrl);\n    String resolveUrl(String code);\n    void recordClick(String code, String ip, String userAgent);\n    StatsResponse getStats(String code);\n}",
+      "OtpRepository.java": "// UrlRepository.java\npublic interface UrlRepository {\n    void saveUrl(String code, String longUrl);\n    Optional<String> getUrl(String code);\n    void recordClick(String code, String ip, String userAgent, Instant timestamp);\n    StatsResponse getStats(String code);\n}"
+    },
+    "GIN": {
+      "otp_controller.go": "// url_controller.go\npackage url\n\nimport (\n\t\"github.com/gin-gonic/gin\"\n\t\"net/http\"\n)\n\ntype UrlController struct {\n\tService UrlService\n}\n\nfunc (c *UrlController) Shorten(ctx *gin.Context) {\n\tvar body ShortenRequest\n\tif err := ctx.ShouldBindJSON(&body); err != nil {\n\t\tctx.JSON(http.StatusBadRequest, gin.H{\"error\": \"url required\"})\n\t\treturn\n\t}\n\t// TODO: call service.CreateShortUrl and return result\n\tctx.JSON(http.StatusOK, gin.H{})\n}\n\nfunc (c *UrlController) Redirect(ctx *gin.Context) {\n\tcode := ctx.Param(\"code\")\n\t// TODO: fetch original URL, record analytics, return redirect\n\t_ = code\n}\n\nfunc (c *UrlController) Stats(ctx *gin.Context) {\n\tcode := ctx.Param(\"code\")\n\t// TODO: return total clicks, top referrers, clicks per day\n\t_ = code\n}",
+      "otp_service.go": "// url_service.go\npackage url\n\ntype UrlService interface {\n\tCreateShortUrl(longUrl string) (*ShortenResponse, error)\n\tResolveUrl(code string) (string, error)\n\tRecordClick(code string, ip string, userAgent string) error\n\tGetStats(code string) (*StatsResponse, error)\n}",
+      "otp_repository.go": "// url_repository.go\npackage url\n\ntype UrlRepository interface {\n\tSaveUrl(code string, longUrl string) error\n\tGetUrl(code string) (string, error)\n\tRecordClick(code string, ip string, userAgent string) error\n\tGetStats(code string) (*StatsResponse, error)\n}"
+    },
+    "FIBER": {
+      "otp_controller.go": "// url_controller.go\npackage url\n\nimport \"github.com/gofiber/fiber/v2\"\n\ntype UrlController struct {\n\tService UrlService\n}\n\nfunc (c *UrlController) Shorten(ctx *fiber.Ctx) error {\n\tvar body ShortenRequest\n\tif err := ctx.BodyParser(&body); err != nil || body.Url == \"\" {\n\t\treturn ctx.Status(400).JSON(fiber.Map{\"error\": \"url required\"})\n\t}\n\t// TODO: call service.CreateShortUrl and return result\n\treturn ctx.JSON(fiber.Map{})\n}\n\nfunc (c *UrlController) Redirect(ctx *fiber.Ctx) error {\n\tcode := ctx.Params(\"code\")\n\t// TODO: fetch original URL, record analytics, return redirect\n\t_ = code\n\treturn nil\n}\n\nfunc (c *UrlController) Stats(ctx *fiber.Ctx) error {\n\tcode := ctx.Params(\"code\")\n\t// TODO: return total clicks, top referrers, clicks per day\n\t_ = code\n\treturn nil\n}",
+      "otp_service.go": "// url_service.go\npackage url\n\ntype UrlService interface {\n\tCreateShortUrl(longUrl string) (*ShortenResponse, error)\n\tResolveUrl(code string) (string, error)\n\tRecordClick(code string, ip string, userAgent string) error\n\tGetStats(code string) (*StatsResponse, error)\n}",
+      "otp_repository.go": "// url_repository.go\npackage url\n\ntype UrlRepository interface {\n\tSaveUrl(code string, longUrl string) error\n\tGetUrl(code string) (string, error)\n\tRecordClick(code string, ip string, userAgent string) error\n\tGetStats(code string) (*StatsResponse, error)\n}"
+    },
+    "ACTIX_WEB": {
+      "otp_controller.rs": "// url_controller.rs\nuse actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};\nuse crate::url_service::UrlService;\n\n#[post(\"/shorten\")]\nasync fn shorten(body: web::Json<ShortenRequest>, service: web::Data<UrlService>) -> impl Responder {\n    // TODO: call service.create_short_url and return result\n    HttpResponse::Ok().json(serde_json::json!({}))\n}\n\n#[get(\"/{code}\")]\nasync fn redirect(path: web::Path<String>, req: HttpRequest) -> impl Responder {\n    let code = path.into_inner();\n    // TODO: fetch original URL, record analytics, return 302 redirect\n    HttpResponse::Found().finish()\n}\n\n#[get(\"/{code}/stats\")]\nasync fn stats(path: web::Path<String>) -> impl Responder {\n    let code = path.into_inner();\n    // TODO: return total clicks, top referrers, clicks per day\n    HttpResponse::Ok().json(serde_json::json!({}))\n}",
+      "otp_service.rs": "// url_service.rs\npub struct UrlService;\n\nimpl UrlService {\n    pub async fn create_short_url(&self, long_url: &str) -> Result<ShortenResponse, Box<dyn std::error::Error>> {\n        todo!()\n    }\n\n    pub async fn resolve_url(&self, code: &str) -> Result<String, Box<dyn std::error::Error>> {\n        todo!()\n    }\n\n    pub async fn record_click(&self, code: &str, ip: &str, user_agent: &str) -> Result<(), Box<dyn std::error::Error>> {\n        todo!()\n    }\n\n    pub async fn get_stats(&self, code: &str) -> Result<StatsResponse, Box<dyn std::error::Error>> {\n        todo!()\n    }\n}",
+      "otp_repository.rs": "// url_repository.rs\npub struct UrlRepository;\n\nimpl UrlRepository {\n    pub async fn save_url(&self, code: &str, long_url: &str) -> Result<(), Box<dyn std::error::Error>> {\n        todo!()\n    }\n\n    pub async fn get_url(&self, code: &str) -> Result<Option<String>, Box<dyn std::error::Error>> {\n        todo!()\n    }\n\n    pub async fn record_click(&self, code: &str, ip: &str, user_agent: &str) -> Result<(), Box<dyn std::error::Error>> {\n        todo!()\n    }\n\n    pub async fn get_stats(&self, code: &str) -> Result<StatsResponse, Box<dyn std::error::Error>> {\n        todo!()\n    }\n}"
+    },
+    "LARAVEL": {
+      "OtpController.php": "<?php\n// UrlController.php\nnamespace App\\Http\\Controllers;\n\nuse Illuminate\\Http\\Request;\nuse App\\Services\\UrlService;\n\nclass UrlController extends Controller {\n\n    public function __construct(private UrlService $urlService) {}\n\n    public function shorten(Request $request) {\n        $request->validate(['url' => 'required|url']);\n        // TODO: call urlService->createShortUrl and return result\n        return response()->json([]);\n    }\n\n    public function redirect(string $code, Request $request) {\n        // TODO: fetch original URL, record analytics, return redirect\n    }\n\n    public function stats(string $code) {\n        // TODO: return total clicks, top referrers, clicks per day\n        return response()->json([]);\n    }\n}",
+      "OtpService.php": "<?php\n// UrlService.php\nnamespace App\\Services;\n\nclass UrlService {\n    public function createShortUrl(string $longUrl): array {\n        // TODO: generate 6-char unique code, store in DB + Redis\n    }\n\n    public function resolveUrl(string $code): ?string {\n        // TODO: fetch from Redis first, fallback to DB\n    }\n\n    public function recordClick(string $code, string $ip, string $userAgent): void {\n        // TODO: store analytics event\n    }\n\n    public function getStats(string $code): array {\n        // TODO: aggregate clicks, referrers, clicks per day\n    }\n}",
+      "OtpRepository.php": "<?php\n// UrlRepository.php\nnamespace App\\Repositories;\n\nclass UrlRepository {\n    public function saveUrl(string $code, string $longUrl): void {\n        // TODO: store short code -> long URL mapping\n    }\n\n    public function getUrl(string $code): ?string {\n        // TODO: fetch from Redis/DB\n    }\n\n    public function recordClick(string $code, string $ip, string $userAgent): void {\n        // TODO: store analytics event\n    }\n\n    public function getStats(string $code): array {\n        // TODO: aggregate and return stats\n    }\n}"
+    }
+  },
+  "exampleTestCases": [
+    {
+      "input": "POST /shorten\n{ \"url\": \"https://example.com/very/long/path\" }",
+      "expectedOutput": "{ \"shortCode\": \"abc123\", \"shortUrl\": \"https://mdc.sh/abc123\" }",
+      "isHide": false
+    },
+    {
+      "input": "GET /abc123/stats",
+      "expectedOutput": "{ \"clicks\": 142, \"uniqueVisitors\": 98, \"topCountries\": [\"IN\", \"US\"] }",
+      "isHide": false
+    },
+    {
+      "input": "GET /abc123",
+      "expectedOutput": "HTTP 302 redirect to original URL",
+      "isHide": true
+    },
+    {
+      "input": "POST /shorten\n{ \"url\": \"https://example.com/another/path\" }",
+      "expectedOutput": "{ \"shortCode\": \"<6-char-unique-code>\", \"shortUrl\": \"https://mdc.sh/<code>\" }",
+      "isHide": true
+    }
+  ]
+}
