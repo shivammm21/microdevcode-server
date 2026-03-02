@@ -31,7 +31,10 @@ public class SecurityConfig {
 
         List<String> publicEndpoints = List.of(
                 "/api/v1/login/**",
-                "/api/v1/problem/get-allproblems"
+                "/api/v1/problem/get-allproblems",
+                "/api/v1/code/languages",
+                "/api/v1/code/frameworks",
+                "/api/v1/code/docker/status"
         );
 
 

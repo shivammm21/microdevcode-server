@@ -1,0 +1,422 @@
+{
+	"info": {
+		"_postman_id": "microdevcode-otp-service",
+		"name": "MicroDevCode - OTP Verification Service",
+		"description": "Test collection for OTP Verification Service code execution APIs",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:9876",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "your_jwt_token_here",
+			"type": "string"
+		},
+		{
+			"key": "problem_id",
+			"value": "1",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.token) {",
+									"        pm.collectionVariables.set('jwt_token', response.token);",
+									"        console.log('JWT Token saved:', response.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"usernameOrEmail\": \"test@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/login/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"login",
+								"login"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Code Execution - Spring Boot",
+			"item": [
+				{
+					"name": "1. Compile OTP Service (Spring Boot)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"problemId\": {{problem_id}},\n    \"framework\": \"SPRING_BOOT\",\n    \"language\": \"java\",\n    \"code\": {\n        \"OtpController.java\": \"@RestController\\n@RequestMapping(\\\"/otp\\\")\\n@RequiredArgsConstructor\\npublic class OtpController {\\n\\n    private final OtpService otpService;\\n\\n    @PostMapping(\\\"/request\\\")\\n    public ResponseEntity<OtpResponse> requestOtp(@RequestBody @Valid OtpRequest body) {\\n        return ResponseEntity.ok(otpService.requestOtp(body.getPhone()));\\n    }\\n\\n    @PostMapping(\\\"/verify\\\")\\n    public ResponseEntity<VerifyResponse> verifyOtp(@RequestBody @Valid VerifyRequest body) {\\n        return ResponseEntity.ok(otpService.verifyOtp(body.getRequestId(), body.getOtp()));\\n    }\\n}\",\n        \"OtpService.java\": \"@Service\\n@RequiredArgsConstructor\\npublic class OtpService {\\n\\n    private final OtpRepository otpRepository;\\n\\n    public OtpResponse requestOtp(String phone) {\\n        String otp = generateOtp();\\n        String requestId = UUID.randomUUID().toString();\\n        \\n        otpRepository.saveOtp(requestId, otp, 300); // 5 minutes TTL\\n        \\n        return new OtpResponse(requestId, 300);\\n    }\\n\\n    public VerifyResponse verifyOtp(String requestId, String otp) {\\n        String storedOtp = otpRepository.getOtp(requestId);\\n        \\n        if (storedOtp == null) {\\n            return new VerifyResponse(false);\\n        }\\n        \\n        long attempts = otpRepository.incrementAttempts(requestId);\\n        \\n        if (attempts > 3) {\\n            throw new RuntimeException(\\\"Max attempts exceeded\\\");\\n        }\\n        \\n        boolean verified = storedOtp.equals(otp);\\n        return new VerifyResponse(verified);\\n    }\\n\\n    private String generateOtp() {\\n        return String.format(\\\"%06d\\\", new Random().nextInt(1000000));\\n    }\\n}\",\n        \"OtpRepository.java\": \"@Repository\\npublic interface OtpRepository {\\n    void saveOtp(String requestId, String otp, long ttlSeconds);\\n    String getOtp(String requestId);\\n    long incrementAttempts(String requestId);\\n}\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/code/compile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"code",
+								"compile"
+							]
+						}
+					}
+				},
+				{
+					"name": "2. Run Test Cases (Spring Boot)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"problemId\": {{problem_id}},\n    \"framework\": \"SPRING_BOOT\",\n    \"language\": \"java\",\n    \"code\": {\n        \"OtpController.java\": \"@RestController\\n@RequestMapping(\\\"/otp\\\")\\n@RequiredArgsConstructor\\npublic class OtpController {\\n\\n    private final OtpService otpService;\\n\\n    @PostMapping(\\\"/request\\\")\\n    public ResponseEntity<OtpResponse> requestOtp(@RequestBody @Valid OtpRequest body) {\\n        return ResponseEntity.ok(otpService.requestOtp(body.getPhone()));\\n    }\\n\\n    @PostMapping(\\\"/verify\\\")\\n    public ResponseEntity<VerifyResponse> verifyOtp(@RequestBody @Valid VerifyRequest body) {\\n        return ResponseEntity.ok(otpService.verifyOtp(body.getRequestId(), body.getOtp()));\\n    }\\n}\",\n        \"OtpService.java\": \"@Service\\n@RequiredArgsConstructor\\npublic class OtpService {\\n\\n    private final OtpRepository otpRepository;\\n\\n    public OtpResponse requestOtp(String phone) {\\n        String otp = generateOtp();\\n        String requestId = UUID.randomUUID().toString();\\n        \\n        otpRepository.saveOtp(requestId, otp, 300); // 5 minutes TTL\\n        \\n        return new OtpResponse(requestId, 300);\\n    }\\n\\n    public VerifyResponse verifyOtp(String requestId, String otp) {\\n        String storedOtp = otpRepository.getOtp(requestId);\\n        \\n        if (storedOtp == null) {\\n            return new VerifyResponse(false);\\n        }\\n        \\n        long attempts = otpRepository.incrementAttempts(requestId);\\n        \\n        if (attempts > 3) {\\n            throw new RuntimeException(\\\"Max attempts exceeded\\\");\\n        }\\n        \\n        boolean verified = storedOtp.equals(otp);\\n        return new VerifyResponse(verified);\\n    }\\n\\n    private String generateOtp() {\\n        return String.format(\\\"%06d\\\", new Random().nextInt(1000000));\\n    }\\n}\",\n        \"OtpRepository.java\": \"@Repository\\npublic interface OtpRepository {\\n    void saveOtp(String requestId, String otp, long ttlSeconds);\\n    String getOtp(String requestId);\\n    long incrementAttempts(String requestId);\\n}\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/code/run",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"code",
+								"run"
+							]
+						}
+					}
+				},
+				{
+					"name": "3. Submit Solution (Spring Boot)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"problemId\": {{problem_id}},\n    \"framework\": \"SPRING_BOOT\",\n    \"language\": \"java\",\n    \"code\": {\n        \"OtpController.java\": \"@RestController\\n@RequestMapping(\\\"/otp\\\")\\n@RequiredArgsConstructor\\npublic class OtpController {\\n\\n    private final OtpService otpService;\\n\\n    @PostMapping(\\\"/request\\\")\\n    public ResponseEntity<OtpResponse> requestOtp(@RequestBody @Valid OtpRequest body) {\\n        return ResponseEntity.ok(otpService.requestOtp(body.getPhone()));\\n    }\\n\\n    @PostMapping(\\\"/verify\\\")\\n    public ResponseEntity<VerifyResponse> verifyOtp(@RequestBody @Valid VerifyRequest body) {\\n        return ResponseEntity.ok(otpService.verifyOtp(body.getRequestId(), body.getOtp()));\\n    }\\n}\",\n        \"OtpService.java\": \"@Service\\n@RequiredArgsConstructor\\npublic class OtpService {\\n\\n    private final OtpRepository otpRepository;\\n\\n    public OtpResponse requestOtp(String phone) {\\n        String otp = generateOtp();\\n        String requestId = UUID.randomUUID().toString();\\n        \\n        otpRepository.saveOtp(requestId, otp, 300); // 5 minutes TTL\\n        \\n        return new OtpResponse(requestId, 300);\\n    }\\n\\n    public VerifyResponse verifyOtp(String requestId, String otp) {\\n        String storedOtp = otpRepository.getOtp(requestId);\\n        \\n        if (storedOtp == null) {\\n            return new VerifyResponse(false);\\n        }\\n        \\n        long attempts = otpRepository.incrementAttempts(requestId);\\n        \\n        if (attempts > 3) {\\n            throw new RuntimeException(\\\"Max attempts exceeded\\\");\\n        }\\n        \\n        boolean verified = storedOtp.equals(otp);\\n        return new VerifyResponse(verified);\\n    }\\n\\n    private String generateOtp() {\\n        return String.format(\\\"%06d\\\", new Random().nextInt(1000000));\\n    }\\n}\",\n        \"OtpRepository.java\": \"@Repository\\npublic interface OtpRepository {\\n    void saveOtp(String requestId, String otp, long ttlSeconds);\\n    String getOtp(String requestId);\\n    long incrementAttempts(String requestId);\\n}\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/code/submit",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"code",
+								"submit"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Code Execution - Python FastAPI",
+			"item": [
+				{
+					"name": "1. Compile OTP Service (FastAPI)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"problemId\": {{problem_id}},\n    \"framework\": \"FAST_API\",\n    \"language\": \"python\",\n    \"code\": {\n        \"main.py\": \"from fastapi import FastAPI, HTTPException\\nfrom pydantic import BaseModel\\nimport uuid\\nimport random\\nimport time\\nfrom typing import Dict\\n\\napp = FastAPI()\\n\\n# In-memory storage (use Redis in production)\\notp_storage: Dict[str, dict] = {}\\n\\nclass OtpRequest(BaseModel):\\n    phone: str\\n\\nclass OtpResponse(BaseModel):\\n    requestId: str\\n    expiresIn: int\\n\\nclass VerifyRequest(BaseModel):\\n    requestId: str\\n    otp: str\\n\\nclass VerifyResponse(BaseModel):\\n    verified: bool\\n\\n@app.post('/otp/request', response_model=OtpResponse)\\nasync def request_otp(request: OtpRequest):\\n    if not request.phone:\\n        raise HTTPException(status_code=400, detail='phone required')\\n    \\n    otp = f'{random.randint(100000, 999999):06d}'\\n    request_id = str(uuid.uuid4())\\n    \\n    otp_storage[request_id] = {\\n        'otp': otp,\\n        'phone': request.phone,\\n        'created_at': time.time(),\\n        'attempts': 0\\n    }\\n    \\n    return OtpResponse(requestId=request_id, expiresIn=300)\\n\\n@app.post('/otp/verify', response_model=VerifyResponse)\\nasync def verify_otp(request: VerifyRequest):\\n    if request.requestId not in otp_storage:\\n        return VerifyResponse(verified=False)\\n    \\n    otp_data = otp_storage[request.requestId]\\n    \\n    # Check if OTP expired (5 minutes)\\n    if time.time() - otp_data['created_at'] > 300:\\n        del otp_storage[request.requestId]\\n        return VerifyResponse(verified=False)\\n    \\n    # Check attempts\\n    otp_data['attempts'] += 1\\n    if otp_data['attempts'] > 3:\\n        raise HTTPException(status_code=429, detail='Max attempts exceeded')\\n    \\n    # Verify OTP\\n    verified = otp_data['otp'] == request.otp\\n    \\n    if verified:\\n        del otp_storage[request.requestId]\\n    \\n    return VerifyResponse(verified=verified)\\n\\nif __name__ == '__main__':\\n    import uvicorn\\n    uvicorn.run(app, host='0.0.0.0', port=8000)\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/code/compile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"code",
+								"compile"
+							]
+						}
+					}
+				},
+				{
+					"name": "2. Run Test Cases (FastAPI)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"problemId\": {{problem_id}},\n    \"framework\": \"FAST_API\",\n    \"language\": \"python\",\n    \"code\": {\n        \"main.py\": \"from fastapi import FastAPI, HTTPException\\nfrom pydantic import BaseModel\\nimport uuid\\nimport random\\nimport time\\nfrom typing import Dict\\n\\napp = FastAPI()\\n\\n# In-memory storage (use Redis in production)\\notp_storage: Dict[str, dict] = {}\\n\\nclass OtpRequest(BaseModel):\\n    phone: str\\n\\nclass OtpResponse(BaseModel):\\n    requestId: str\\n    expiresIn: int\\n\\nclass VerifyRequest(BaseModel):\\n    requestId: str\\n    otp: str\\n\\nclass VerifyResponse(BaseModel):\\n    verified: bool\\n\\n@app.post('/otp/request', response_model=OtpResponse)\\nasync def request_otp(request: OtpRequest):\\n    if not request.phone:\\n        raise HTTPException(status_code=400, detail='phone required')\\n    \\n    otp = f'{random.randint(100000, 999999):06d}'\\n    request_id = str(uuid.uuid4())\\n    \\n    otp_storage[request_id] = {\\n        'otp': otp,\\n        'phone': request.phone,\\n        'created_at': time.time(),\\n        'attempts': 0\\n    }\\n    \\n    return OtpResponse(requestId=request_id, expiresIn=300)\\n\\n@app.post('/otp/verify', response_model=VerifyResponse)\\nasync def verify_otp(request: VerifyRequest):\\n    if request.requestId not in otp_storage:\\n        return VerifyResponse(verified=False)\\n    \\n    otp_data = otp_storage[request.requestId]\\n    \\n    # Check if OTP expired (5 minutes)\\n    if time.time() - otp_data['created_at'] > 300:\\n        del otp_storage[request.requestId]\\n        return VerifyResponse(verified=False)\\n    \\n    # Check attempts\\n    otp_data['attempts'] += 1\\n    if otp_data['attempts'] > 3:\\n        raise HTTPException(status_code=429, detail='Max attempts exceeded')\\n    \\n    # Verify OTP\\n    verified = otp_data['otp'] == request.otp\\n    \\n    if verified:\\n        del otp_storage[request.requestId]\\n    \\n    return VerifyResponse(verified=verified)\\n\\nif __name__ == '__main__':\\n    import uvicorn\\n    uvicorn.run(app, host='0.0.0.0', port=8000)\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/code/run",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"code",
+								"run"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Code Execution - Node.js Express",
+			"item": [
+				{
+					"name": "1. Compile OTP Service (Express.js)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"problemId\": {{problem_id}},\n    \"framework\": \"EXPRESS_JS\",\n    \"language\": \"javascript\",\n    \"code\": {\n        \"server.js\": \"const express = require('express');\\nconst { v4: uuidv4 } = require('uuid');\\n\\nconst app = express();\\napp.use(express.json());\\n\\n// In-memory storage (use Redis in production)\\nconst otpStorage = new Map();\\n\\n// Generate 6-digit OTP\\nfunction generateOtp() {\\n    return Math.floor(100000 + Math.random() * 900000).toString();\\n}\\n\\n// POST /otp/request\\napp.post('/otp/request', (req, res) => {\\n    const { phone } = req.body;\\n    \\n    if (!phone) {\\n        return res.status(400).json({ error: 'phone required' });\\n    }\\n    \\n    const otp = generateOtp();\\n    const requestId = uuidv4();\\n    \\n    // Store OTP with 5-minute TTL\\n    otpStorage.set(requestId, {\\n        otp,\\n        phone,\\n        createdAt: Date.now(),\\n        attempts: 0\\n    });\\n    \\n    // Auto-cleanup after 5 minutes\\n    setTimeout(() => {\\n        otpStorage.delete(requestId);\\n    }, 5 * 60 * 1000);\\n    \\n    res.json({\\n        requestId,\\n        expiresIn: 300\\n    });\\n});\\n\\n// POST /otp/verify\\napp.post('/otp/verify', (req, res) => {\\n    const { requestId, otp } = req.body;\\n    \\n    if (!requestId || !otp) {\\n        return res.status(400).json({ error: 'requestId and otp required' });\\n    }\\n    \\n    const otpData = otpStorage.get(requestId);\\n    \\n    if (!otpData) {\\n        return res.json({ verified: false });\\n    }\\n    \\n    // Check if expired\\n    if (Date.now() - otpData.createdAt > 5 * 60 * 1000) {\\n        otpStorage.delete(requestId);\\n        return res.json({ verified: false });\\n    }\\n    \\n    // Increment attempts\\n    otpData.attempts++;\\n    \\n    if (otpData.attempts > 3) {\\n        otpStorage.delete(requestId);\\n        return res.status(429).json({ error: 'Max attempts exceeded' });\\n    }\\n    \\n    // Verify OTP\\n    const verified = otpData.otp === otp;\\n    \\n    if (verified) {\\n        otpStorage.delete(requestId);\\n    }\\n    \\n    res.json({ verified });\\n});\\n\\nconst PORT = process.env.PORT || 3000;\\napp.listen(PORT, () => {\\n    console.log(`OTP Service running on port ${PORT}`);\\n});\",\n        \"package.json\": \"{\\n  \\\"name\\\": \\\"otp-service\\\",\\n  \\\"version\\\": \\\"1.0.0\\\",\\n  \\\"main\\\": \\\"server.js\\\",\\n  \\\"dependencies\\\": {\\n    \\\"express\\\": \\\"^4.18.0\\\",\\n    \\\"uuid\\\": \\\"^9.0.0\\\"\\n  }\\n}\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/code/compile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"code",
+								"compile"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Utility Endpoints",
+			"item": [
+				{
+					"name": "Get Supported Languages",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/code/languages",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"code",
+								"languages"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Supported Frameworks",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/code/frameworks",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"code",
+								"frameworks"
+							]
+						}
+					}
+				},
+				{
+					"name": "Check Docker Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/code/docker/status",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"code",
+								"docker",
+								"status"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Error Test Cases",
+			"item": [
+				{
+					"name": "Compile with Missing Code",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"problemId\": {{problem_id}},\n    \"framework\": \"SPRING_BOOT\",\n    \"language\": \"java\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/code/compile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"code",
+								"compile"
+							]
+						}
+					}
+				},
+				{
+					"name": "Run with Missing Problem ID",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"framework\": \"SPRING_BOOT\",\n    \"language\": \"java\",\n    \"code\": {\n        \"Main.java\": \"public class Main { public static void main(String[] args) { System.out.println(\\\"Hello\\\"); } }\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/code/run",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"code",
+								"run"
+							]
+						}
+					}
+				},
+				{
+					"name": "Compile with Syntax Error",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"problemId\": {{problem_id}},\n    \"framework\": \"SPRING_BOOT\",\n    \"language\": \"java\",\n    \"code\": {\n        \"BrokenCode.java\": \"public class BrokenCode {\\n    public static void main(String[] args) {\\n        System.out.println(\\\"Missing semicolon\\\")\\n    }\\n}\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/code/compile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"code",
+								"compile"
+							]
+						}
+					}
+				}
+			]
+		}
+	]
+}

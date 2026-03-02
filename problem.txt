@@ -1,3 +1,8 @@
+# Make the script executable and run it
+chmod +x docker-setup.sh
+./docker-setup.sh
+
+
 {
   "title": "OTP Verification Service",
   "description": "Design a One-Time Password (OTP) Verification Service. The service must: 1. POST /otp/request — generate a 6-digit OTP, store in Redis with 5-min TTL, return requestId. 2. POST /otp/verify — validate OTP against Redis, enforce max 3 attempts, return verified status.",
